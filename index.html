@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio — QA Automation & Infrastructure</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; color: #1d1d1f; -webkit-font-smoothing: antialiased; }
+    @keyframes blink { 0%,100% { opacity:1 } 50% { opacity:0 } }
+    @keyframes bop { 0%,60%,100% { transform:translateY(0) } 30% { transform:translateY(-5px) } }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18.3.1",
+      "react-dom": "https://esm.sh/react-dom@18.3.1",
+      "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+      "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import React, { useState, useRef, useEffect, useCallback } from "react";
+    import { createRoot } from "react-dom/client";
+
+    const h = React.createElement;
+
+    /* ═══════════════════════════════════════
+       OFFLINE AI CLONE
+       ═══════════════════════════════════════ */
+    const KNOWLEDGE = [
+      { keys: ["biggest","proudest","achievement","best","impressive","top","highlight"], response: "Hands down — the Regression Automation Suite. I took 20 full days of manual regression testing and turned it into an automated Playwright + TypeScript suite that runs unattended. It fundamentally changed how our team ships software." },
+      { keys: ["regression","20 days","testing","automat","playwright","suite","manual testing"], response: "The regression suite was my flagship project. Our QA team was spending 20 days per release cycle manually walking through every payroll workflow. I built a comprehensive Playwright + TypeScript suite using the Page Object Model pattern. It runs unattended in CI, catches regressions before code review, and completely freed the team." },
+      { keys: ["migration","data migration","company creation","onboard","union","prevailing","worker","patch"], response: "The Data Migration Engine handles the full entity graph: company creation → unions → prevailing wages → projects → workers. The key innovation was the patchwork system: if something fails midway, you patch just that piece without re-running everything." },
+      { keys: ["demo","one-click","one click","sandbox","sales","seed"], response: "I'm building the One-Click Demo Company Creator. A single command spins up a fully-featured company with production-realistic data — workers, projects, unions, payroll configs. Serves sales, QA, and dev teams." },
+      { keys: ["stack","tech","language","tool","framework","technolog"], response: "Core stack: Playwright + TypeScript for automation, React + TypeScript frontend, Node.js backend tooling, PostgreSQL. Also CI/CD pipelines, Page Object Model, and SQL scripting." },
+      { keys: ["philosophy","approach","principle","believe","mindset","why","motivation"], response: "Simple: if you're doing it twice, automate it. The best engineering isn't clever code — it's eliminating toil so humans focus on work requiring human judgment." },
+      { keys: ["who","about you","yourself","introduce","tell me about","background","role"], response: "I'm a QA Automation & Infrastructure Engineer at a construction payroll SaaS company. I turn painful manual processes into elegant automated solutions — from 20-day regression suites to one-click company creation." },
+      { keys: ["patchwork","partial","resum","re-run","rerun","fail","error handling"], response: "Each entity type is an independent, idempotent migration unit. If workers fail after unions succeed, you re-run just the worker patch. You can surgically update any single entity type without touching the rest." },
+      { keys: ["challenge","hard","difficult","struggle","problem","obstacle","learn"], response: "Hardest part was test architecture. Payroll workflows are deeply stateful — tests depend on specific data and can interfere. I designed careful data isolation and a robust Page Object Model. Lesson: invest in architecture upfront or pay 10x later." },
+      { keys: ["future","next","plan","goal","coming","roadmap"], response: "After the demo creator, I'm looking at self-healing test infrastructure — tests that detect UI changes vs actual bugs. Also observability dashboards for test health trends." },
+      { keys: ["team","collaborate","work with","impact","people"], response: "My work impacts the whole org. The regression suite freed QA, the migration engine unblocked sales, and the demo creator serves everyone. Best infrastructure is invisible — people just notice things got faster." },
+      { keys: ["hello","hi","hey","morning","sup","what's up"], response: "Hey! I'm the AI version — loaded with everything about my automation projects, tech stack, and philosophy. Ask me anything!" },
+    ];
+    const FALLBACK = "That's outside what I've been loaded with. Try asking about the regression suite, migration engine, or demo company creator!";
+    function getResponse(input) {
+      const lower = input.toLowerCase();
+      let best = null, bestScore = 0;
+      for (const e of KNOWLEDGE) {
+        let score = 0;
+        for (const k of e.keys) if (lower.includes(k)) score += k.length;
+        if (score > bestScore) { bestScore = score; best = e; }
+      }
+      return bestScore > 0 ? best.response : FALLBACK;
+    }
+
+    const SUGGESTED_QS = [
+      "What's your proudest achievement?",
+      "How did you automate 20 days of testing?",
+      "Explain the patchwork migration system",
+      "What's your engineering philosophy?",
+      "What tech stack do you use?",
+      "What are you building next?",
+    ];
+
+    /* ═══════════════════════════════════════
+       SCROLL REVEAL
+       ═══════════════════════════════════════ */
+    function useReveal(threshold = 0.15) {
+      const ref = useRef(null);
+      const [visible, setVisible] = useState(false);
+      useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold });
+        obs.observe(el);
+        return () => obs.disconnect();
+      }, [threshold]);
+      return [ref, visible];
+    }
+
+    function Reveal({ children, delay = 0, style = {} }) {
+      const [ref, vis] = useReveal(0.12);
+      return h("div", {
+        ref,
+        style: {
+          ...style,
+          opacity: vis ? 1 : 0,
+          transform: vis ? "translateY(0)" : "translateY(40px)",
+          transition: `opacity 0.9s cubic-bezier(0.25,0.46,0.45,0.94) ${delay}s, transform 0.9s cubic-bezier(0.25,0.46,0.45,0.94) ${delay}s`,
+        }
+      }, children);
+    }
+
+    /* ═══════════════════════════════════════
+       NAV
+       ═══════════════════════════════════════ */
+    function Nav({ page, setPage }) {
+      const items = [{ id:"home", label:"Home" }, { id:"projects", label:"Projects" }, { id:"clone", label:"AI Clone" }];
+      return h("nav", { style: {
+        position:"fixed", top:0, left:0, right:0, zIndex:200,
+        padding:"0 32px", height:52,
+        background:"rgba(255,255,255,0.82)", backdropFilter:"blur(20px) saturate(180%)",
+        borderBottom:"1px solid rgba(0,0,0,0.08)",
+        display:"flex", alignItems:"center", justifyContent:"space-between",
+      }},
+        h("div", { style: { fontWeight:600, fontSize:15, color:"#1d1d1f", cursor:"pointer", letterSpacing:-0.3 }, onClick: () => setPage("home") },
+          h("span", { style: { color:"#0071e3" } }, "●"), "\u2002Portfolio"
+        ),
+        h("div", { style: { display:"flex", gap:2 } },
+          ...items.map(it =>
+            h("button", { key: it.id, onClick: () => setPage(it.id), style: {
+              background: page === it.id ? "#f5f5f7" : "transparent",
+              border:"none", borderRadius:20, padding:"6px 16px", cursor:"pointer",
+              color: page === it.id ? "#1d1d1f" : "#86868b",
+              fontSize:12, fontWeight:500, fontFamily:"inherit", transition:"all 0.2s",
+            }}, it.label)
+          )
+        )
+      );
+    }
+
+    /* ═══════════════════════════════════════
+       SVG GRAPHICS
+       ═══════════════════════════════════════ */
+    function RegressionGraphic() {
+      const [progress, setProgress] = useState(0);
+      const [ref, vis] = useReveal(0.3);
+      useEffect(() => {
+        if (vis && progress < 100) {
+          const t = setInterval(() => setProgress(p => Math.min(p + 2, 100)), 30);
+          return () => clearInterval(t);
+        }
+      }, [vis, progress]);
+
+      return h("div", { ref, style: { width:"100%", maxWidth:560, margin:"0 auto" } },
+        h("svg", { viewBox:"0 0 560 320", fill:"none", xmlns:"http://www.w3.org/2000/svg", style: { width:"100%" } },
+          h("rect", { x:20, y:20, width:520, height:280, rx:20, fill:"#f5f5f7" }),
+          h("text", { x:60, y:90, fontFamily:"inherit", fontSize:13, fontWeight:500, fill:"#86868b" }, "BEFORE"),
+          h("rect", { x:60, y:102, width:420, height:36, rx:8, fill:"#fecaca" }),
+          h("rect", { x:60, y:102, width: 420 * progress / 100, height:36, rx:8, fill:"#ef4444", style:{transition:"width 0.05s"} }),
+          h("text", { x:70, y:125, fontFamily:"monospace", fontSize:12, fontWeight:600, fill:"#fff" }, "20 days manual testing"),
+          h("text", { x:60, y:180, fontFamily:"inherit", fontSize:13, fontWeight:500, fill:"#86868b" }, "AFTER"),
+          h("rect", { x:60, y:192, width:420, height:36, rx:8, fill:"#dcfce7" }),
+          h("rect", { x:60, y:192, width: Math.min(420 * progress / 100, 42), height:36, rx:8, fill:"#16a34a", style:{transition:"width 0.05s"} }),
+          h("text", { x:70, y:215, fontFamily:"monospace", fontSize:12, fontWeight:600, fill:"#fff" }, vis ? "Automated ⚡" : ""),
+          h("text", { x:280, y:275, textAnchor:"middle", fontFamily:"inherit", fontSize:22, fontWeight:700, fill:"#16a34a" }, vis ? `${Math.round(progress)}% automated` : ""),
+        )
+      );
+    }
+
+    function MigrationGraphic() {
+      const [ref, vis] = useReveal(0.3);
+      const nodes = [
+        { label:"Company", x:280, y:40, color:"#0071e3" },
+        { label:"Unions", x:100, y:130, color:"#5856d6" },
+        { label:"Prev. Wages", x:280, y:130, color:"#5856d6" },
+        { label:"Projects", x:460, y:130, color:"#5856d6" },
+        { label:"Workers", x:280, y:220, color:"#34c759" },
+      ];
+      const edges = [[0,1],[0,2],[0,3],[1,4],[2,4],[3,4]];
+
+      return h("div", { ref, style: { width:"100%", maxWidth:560, margin:"0 auto" } },
+        h("svg", { viewBox:"0 0 560 300", fill:"none", xmlns:"http://www.w3.org/2000/svg", style:{ width:"100%" } },
+          h("rect", { x:20, y:10, width:520, height:280, rx:20, fill:"#f5f5f7" }),
+          ...edges.map(([a,b], i) =>
+            h("line", { key:`e${i}`, x1:nodes[a].x, y1:nodes[a].y+18, x2:nodes[b].x, y2:nodes[b].y-4,
+              stroke: vis ? "#c7c7cc" : "transparent", strokeWidth:2, strokeDasharray:"6 4",
+              style:{ transition:`stroke 0.6s ease ${0.3+i*0.12}s` } })
+          ),
+          ...nodes.map((n, i) =>
+            h("g", { key:`n${i}`, style: {
+              opacity: vis ? 1 : 0, transform: vis ? "translateY(0)" : "translateY(15px)",
+              transition: `all 0.6s ease ${0.2+i*0.15}s`,
+            }},
+              h("rect", { x:n.x-54, y:n.y-16, width:108, height:34, rx:10, fill:n.color }),
+              h("text", { x:n.x, y:n.y+4, textAnchor:"middle", fontFamily:"inherit", fontSize:12, fontWeight:600, fill:"#fff" }, n.label),
+            )
+          ),
+          vis ? h("g", { style:{ opacity:1, transition:"opacity 0.6s ease 1.2s" } },
+            h("rect", { x:178, y:256, width:204, height:28, rx:14, fill:"#fff3cd", stroke:"#f59e0b", strokeWidth:1 }),
+            h("text", { x:280, y:275, textAnchor:"middle", fontFamily:"monospace", fontSize:11, fontWeight:600, fill:"#92400e" }, "Patchable at every node ↻"),
+          ) : null,
+        )
+      );
+    }
+
+    function DemoGraphic() {
+      const [ref, vis] = useReveal(0.3);
+      const [step, setStep] = useState(0);
+      useEffect(() => {
+        if (vis && step < 5) { const t = setTimeout(() => setStep(s => s + 1), 500); return () => clearTimeout(t); }
+      }, [vis, step]);
+      const items = ["Company","Workers","Projects","Unions","Payroll Config"];
+
+      return h("div", { ref, style: { width:"100%", maxWidth:560, margin:"0 auto" } },
+        h("svg", { viewBox:"0 0 560 320", fill:"none", xmlns:"http://www.w3.org/2000/svg", style:{ width:"100%" } },
+          h("rect", { x:20, y:20, width:520, height:280, rx:20, fill:"#f5f5f7" }),
+          h("g", { style: { opacity: vis?1:0, transform: vis?"scale(1)":"scale(0.8)", transformOrigin:"160px 110px", transition:"all 0.5s ease 0.2s" } },
+            h("rect", { x:100, y:70, width:120, height:80, rx:16, fill:"#1d1d1f" }),
+            h("text", { x:160, y:106, textAnchor:"middle", fontSize:24, fill:"#fff" }, "⚡"),
+            h("text", { x:160, y:130, textAnchor:"middle", fontFamily:"monospace", fontSize:10, fontWeight:600, fill:"#86868b" }, "1 CLICK"),
+          ),
+          h("line", { x1:240, y1:110, x2:300, y2:110, stroke: vis?"#c7c7cc":"transparent", strokeWidth:2, style:{ transition:"stroke 0.4s ease 0.6s" } }),
+          ...items.map((item, i) =>
+            h("g", { key: i, style: { opacity: i<step?1:0, transform: i<step?"translateX(0)":"translateX(-20px)", transition:`all 0.4s ease ${0.7+i*0.15}s` } },
+              h("rect", { x:320, y:52+i*46, width:170, height:34, rx:8, fill: i<step?"#dcfce7":"#f5f5f7", stroke: i<step?"#16a34a":"#e5e7eb", strokeWidth:1 }),
+              h("text", { x:336, y:74+i*46, fontFamily:"inherit", fontSize:13, fontWeight:500, fill: i<step?"#16a34a":"#86868b" }, (i<step?"✓ ":"○ ")+item),
+            )
+          ),
+          step >= 5 ? h("text", { x:280, y:300, textAnchor:"middle", fontFamily:"inherit", fontSize:16, fontWeight:600, fill:"#1d1d1f" }, "Production-realistic in seconds") : null,
+        )
+      );
+    }
+
+    /* ═══════════════════════════════════════
+       TERMINAL
+       ═══════════════════════════════════════ */
+    function TerminalBlock() {
+      const lines = [
+        { p:true, text:'cat philosophy.txt' },
+        { p:false, text:'"If you\'re doing it twice, automate it."' },
+        { p:true, text:'ls ./impact' },
+        { p:false, text:'regression-suite/  migration-engine/  demo-creator/' },
+        { p:true, text:'echo $STATUS' },
+        { p:false, text:'Building things that make teams faster.' },
+      ];
+      const [v, setV] = useState(0);
+      useEffect(() => { if (v < lines.length) { const t = setTimeout(() => setV(x=>x+1), v===0?600:420); return ()=>clearTimeout(t); } }, [v]);
+
+      return h("div", { style: {
+        background:"#1d1d1f", borderRadius:16, padding:"20px 24px",
+        fontFamily:"'Courier New', monospace", fontSize:13.5, lineHeight:2,
+        maxWidth:520, boxShadow:"0 20px 60px rgba(0,0,0,0.12)",
+      }},
+        h("div", { style:{ display:"flex", gap:6, marginBottom:14 } },
+          ...["#ff5f57","#febc2e","#28c840"].map(c => h("div", { key:c, style:{ width:10, height:10, borderRadius:"50%", background:c, opacity:0.9 } }))
+        ),
+        ...lines.slice(0, v).map((l, i) =>
+          h("div", { key:i, style:{ color: l.p ? "#fbbf24" : "#a1a1a6", whiteSpace:"pre-wrap" } },
+            l.p ? h("span", { style:{ color:"#30d158", marginRight:8 } }, "→") : null, l.text
+          )
+        ),
+        v < lines.length ? h("span", { style:{ color:"#fbbf24", animation:"blink 1s step-end infinite" } }, "▋") : null,
+      );
+    }
+
+    /* ═══════════════════════════════════════
+       HOME PAGE
+       ═══════════════════════════════════════ */
+    function HomePage({ setPage }) {
+      return h("div", { style:{ paddingTop:52 } },
+        h("section", { style: {
+          minHeight:"calc(100vh - 52px)", display:"flex", flexDirection:"column",
+          justifyContent:"center", padding:"60px 40px", maxWidth:980, margin:"0 auto", gap:48,
+        }},
+          h(Reveal, null,
+            h("div", { style:{ display:"inline-block", padding:"5px 14px", borderRadius:20, background:"#f5f5f7", fontSize:12, fontWeight:500, color:"#86868b", marginBottom:16 } }, "QA Automation · Infrastructure · Tooling"),
+            h("h1", { style:{ fontSize:"min(64px, 10vw)", fontWeight:700, lineHeight:1.05, margin:"0 0 20px", letterSpacing:-3, color:"#1d1d1f" } },
+              "I build the systems", h("br"), h("span", { style:{ color:"#0071e3" } }, "that build the product.")
+            ),
+            h("p", { style:{ fontSize:21, color:"#86868b", lineHeight:1.55, maxWidth:540, margin:"0 0 36px", fontWeight:400 } },
+              "Turning weeks of manual work into one-click solutions."
+            ),
+            h("div", { style:{ display:"flex", gap:12, flexWrap:"wrap" } },
+              h("button", { onClick: ()=>setPage("projects"), style:{ background:"#0071e3", color:"#fff", border:"none", borderRadius:980, padding:"14px 32px", fontSize:15, fontWeight:500, cursor:"pointer", fontFamily:"inherit" } }, "View Projects"),
+              h("button", { onClick: ()=>setPage("clone"), style:{ background:"transparent", color:"#0071e3", border:"none", borderRadius:980, padding:"14px 32px", fontSize:15, fontWeight:500, cursor:"pointer", fontFamily:"inherit" } }, "Talk to AI Clone →"),
+            ),
+          ),
+          h(Reveal, { delay: 0.2 }, h(TerminalBlock)),
+        ),
+        h("section", { style:{ padding:"80px 40px", maxWidth:980, margin:"0 auto", borderTop:"1px solid #e5e5ea" } },
+          h(Reveal, null,
+            h("div", { style:{ display:"flex", justifyContent:"space-between", flexWrap:"wrap", gap:40 } },
+              ...[
+                { num:"20 days", sub:"Manual testing automated" },
+                { num:"3 systems", sub:"Built from scratch" },
+                { num:"1-click", sub:"Company creation" },
+              ].map(({ num, sub }) =>
+                h("div", { key:sub, style:{ flex:"1 1 200px" } },
+                  h("div", { style:{ fontSize:48, fontWeight:700, color:"#1d1d1f", letterSpacing:-2 } }, num),
+                  h("div", { style:{ fontSize:15, color:"#86868b", marginTop:4 } }, sub),
+                )
+              )
+            )
+          )
+        ),
+      );
+    }
+
+    /* ═══════════════════════════════════════
+       PROJECTS PAGE
+       ═══════════════════════════════════════ */
+    function ProjectSection({ tag, tagColor, tagBg, title, subtitle, GraphicComponent, problem, solution, stack, stackBg, sectionBg }) {
+      return h("section", { style:{ background: sectionBg || "#fff", padding:"120px 40px" } },
+        h("div", { style:{ maxWidth:980, margin:"0 auto" } },
+          h(Reveal, null,
+            h("div", { style:{ textAlign:"center", marginBottom:60 } },
+              h("div", { style:{ display:"inline-block", padding:"6px 20px", borderRadius:980, background:tagBg, fontSize:13, fontWeight:600, color:tagColor, marginBottom:20 } }, tag),
+              h("h3", { style:{ fontSize:"min(56px, 9vw)", fontWeight:700, color:"#1d1d1f", margin:"0 0 16px", letterSpacing:-2.5, lineHeight:1.05 } }, ...title),
+              h("p", { style:{ fontSize:21, color:"#86868b", maxWidth:560, margin:"0 auto", lineHeight:1.5 } }, subtitle),
+            ),
+          ),
+          h(Reveal, { delay:0.15 }, h(GraphicComponent)),
+          h(Reveal, { delay:0.1 },
+            h("div", { style:{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:40, marginTop:80, maxWidth:760, margin:"80px auto 0" } },
+              h("div", null,
+                h("div", { style:{ fontSize:11, fontWeight:600, letterSpacing:1.5, color:"#86868b", marginBottom:10, fontFamily:"monospace" } }, "THE PROBLEM"),
+                h("p", { style:{ fontSize:17, color:"#1d1d1f", lineHeight:1.65, margin:0 } }, problem),
+              ),
+              h("div", null,
+                h("div", { style:{ fontSize:11, fontWeight:600, letterSpacing:1.5, color:tagColor, marginBottom:10, fontFamily:"monospace" } }, "THE SOLUTION"),
+                h("p", { style:{ fontSize:17, color:"#1d1d1f", lineHeight:1.65, margin:0 } }, solution),
+              ),
+            ),
+          ),
+          h(Reveal, { delay:0.1 },
+            h("div", { style:{ display:"flex", justifyContent:"center", gap:10, marginTop:48, flexWrap:"wrap" } },
+              ...stack.map(t =>
+                h("span", { key:t, style:{ padding:"8px 20px", borderRadius:980, fontSize:14, fontWeight:500, background: stackBg || "#f5f5f7", color:"#1d1d1f" } }, t)
+              )
+            ),
+          ),
+        )
+      );
+    }
+
+    function ProjectsPage({ setPage }) {
+      return h("div", { style:{ paddingTop:52 } },
+        // Hero
+        h("section", { style:{ minHeight:"60vh", display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", textAlign:"center", padding:"80px 40px" } },
+          h(Reveal, null,
+            h("div", { style:{ fontSize:12, fontWeight:500, color:"#86868b", letterSpacing:1, marginBottom:16 } }, "PROJECTS"),
+            h("h2", { style:{ fontSize:"min(64px, 10vw)", fontWeight:700, color:"#1d1d1f", margin:"0 0 16px", letterSpacing:-3, lineHeight:1.05 } }, "What I've built."),
+            h("p", { style:{ fontSize:21, color:"#86868b", maxWidth:480, margin:"0 auto", lineHeight:1.5 } }, "Every project eliminated a real bottleneck.", h("br"), "Scroll to see the story."),
+          )
+        ),
+
+        // Project 1
+        h(ProjectSection, {
+          tag: "Shipped", tagColor: "#16a34a", tagBg: "#dcfce7",
+          title: ["Regression Automation", h("br", { key:"b" }), "Suite"],
+          subtitle: "20 days of manual testing. Gone.",
+          GraphicComponent: RegressionGraphic,
+          problem: "The QA team spent 20 full days per release manually clicking through every payroll workflow and edge case. Slow, error-prone, and demoralizing.",
+          solution: "A comprehensive Playwright + TypeScript suite using Page Object Model. Runs unattended in CI, catches regressions before code review, and freed the team entirely.",
+          stack: ["Playwright","TypeScript","CI/CD","Page Object Model"],
+          sectionBg: "#fff",
+        }),
+
+        // Project 2
+        h(ProjectSection, {
+          tag: "Shipped", tagColor: "#2563eb", tagBg: "#dbeafe",
+          title: ["Data Migration", h("br", { key:"b" }), "Engine"],
+          subtitle: "Patchable. Resumable. Reliable.",
+          GraphicComponent: MigrationGraphic,
+          problem: "Onboarding companies meant manually creating entities across dozens of tables. If anything failed midway, the entire process restarted from scratch.",
+          solution: "An end-to-end migration pipeline handling the full entity graph with a patchwork layer — any entity can be individually re-migrated without restarting.",
+          stack: ["PostgreSQL","Node.js","SQL Scripts","Patch Architecture"],
+          stackBg: "#fff", sectionBg: "#f5f5f7",
+        }),
+
+        // Project 3
+        h(ProjectSection, {
+          tag: "In Progress", tagColor: "#d97706", tagBg: "#fef3c7",
+          title: ["One-Click Demo", h("br", { key:"b" }), "Company"],
+          subtitle: "One command. Full company. Production-realistic.",
+          GraphicComponent: DemoGraphic,
+          problem: "Every demo, QA environment, and sandbox required hours of manual data entry. Inconsistent data led to embarrassing failures.",
+          solution: "A single CLI command that generates a complete company with workers, projects, unions, and payroll configs — all internally consistent and production-realistic.",
+          stack: ["TypeScript","PostgreSQL","Seed Factories","CLI Tool"],
+          sectionBg: "#fff",
+        }),
+
+        // CTA
+        h("section", { style:{ padding:"120px 40px", textAlign:"center", background:"#f5f5f7" } },
+          h(Reveal, null,
+            h("h3", { style:{ fontSize:48, fontWeight:700, color:"#1d1d1f", margin:"0 0 16px", letterSpacing:-2 } }, "Want to know more?"),
+            h("p", { style:{ fontSize:21, color:"#86868b", margin:"0 0 32px" } }, "My AI clone can answer anything about these projects."),
+            h("button", { onClick: ()=>setPage("clone"), style:{ background:"#0071e3", color:"#fff", border:"none", borderRadius:980, padding:"16px 36px", fontSize:17, fontWeight:500, cursor:"pointer", fontFamily:"inherit" } }, "Talk to My AI Clone →"),
+          )
+        ),
+      );
+    }
+
+    /* ═══════════════════════════════════════
+       AI CLONE PAGE
+       ═══════════════════════════════════════ */
+    function ClonePage() {
+      const [messages, setMessages] = useState([]);
+      const [input, setInput] = useState("");
+      const [typing, setTyping] = useState(false);
+      const endRef = useRef(null);
+      const inputRef = useRef(null);
+
+      useEffect(() => { endRef.current?.scrollIntoView({ behavior:"smooth" }); }, [messages, typing]);
+      useEffect(() => { inputRef.current?.focus(); }, []);
+
+      const send = useCallback((text) => {
+        if (!text.trim() || typing) return;
+        setMessages(prev => [...prev, { role:"user", content:text.trim() }]);
+        setInput("");
+        setTyping(true);
+        setTimeout(() => {
+          setMessages(prev => [...prev, { role:"assistant", content: getResponse(text) }]);
+          setTyping(false);
+        }, 500 + Math.random() * 700);
+      }, [typing]);
+
+      return h("div", { style:{ paddingTop:52, height:"100vh", display:"flex", flexDirection:"column" } },
+        h("div", { style:{ flex:1, overflowY:"auto", padding:"0 20px" } },
+          h("div", { style:{ maxWidth:700, margin:"0 auto", padding:"40px 0 20px" } },
+            messages.length === 0 && !typing
+              ? h("div", { style:{ textAlign:"center", paddingTop:60 } },
+                  h("div", { style:{ width:72, height:72, borderRadius:"50%", margin:"0 auto 24px", background:"#f5f5f7", display:"flex", alignItems:"center", justifyContent:"center", fontSize:32 } }, "💬"),
+                  h("h2", { style:{ fontSize:36, fontWeight:700, color:"#1d1d1f", margin:"0 0 8px", letterSpacing:-1.2 } }, "My AI Clone"),
+                  h("p", { style:{ fontSize:17, color:"#86868b", margin:"0 0 8px", lineHeight:1.5 } }, "Ask me about my projects, decisions, and philosophy."),
+                  h("p", { style:{ fontSize:12, color:"#0071e3", margin:"0 0 40px", fontFamily:"monospace", fontWeight:500 } }, "⚡ Runs entirely offline — no APIs"),
+                  h("div", { style:{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, maxWidth:520, margin:"0 auto" } },
+                    ...SUGGESTED_QS.map(q =>
+                      h("button", { key:q, onClick: ()=>send(q), style:{
+                        background:"#fff", border:"1px solid #e5e5ea", borderRadius:12, padding:"14px 16px",
+                        color:"#1d1d1f", fontSize:14, cursor:"pointer", textAlign:"left", lineHeight:1.4, fontFamily:"inherit",
+                      }}, q)
+                    )
+                  ),
+                )
+              : h("div", null,
+                  ...messages.map((m, i) => {
+                    const isUser = m.role === "user";
+                    return h("div", { key:i, style:{ display:"flex", justifyContent: isUser?"flex-end":"flex-start", marginBottom:14, alignItems:"flex-end" } },
+                      !isUser ? h("div", { style:{ width:30, height:30, borderRadius:"50%", flexShrink:0, background:"#f5f5f7", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, marginRight:8 } }, "💬") : null,
+                      h("div", { style:{
+                        maxWidth:"75%", padding:"12px 18px",
+                        borderRadius: isUser ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                        background: isUser ? "#0071e3" : "#f5f5f7",
+                        color: isUser ? "#fff" : "#1d1d1f",
+                        fontSize:15, lineHeight:1.6, fontFamily:"inherit",
+                      }}, m.content),
+                    );
+                  }),
+                  typing ? h("div", { style:{ display:"flex", alignItems:"flex-end", gap:8, marginBottom:14 } },
+                    h("div", { style:{ width:30, height:30, borderRadius:"50%", flexShrink:0, background:"#f5f5f7", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14 } }, "💬"),
+                    h("div", { style:{ display:"flex", gap:5, padding:"14px 20px", background:"#f5f5f7", borderRadius:"18px 18px 18px 4px" } },
+                      ...[0,1,2].map(i => h("div", { key:i, style:{ width:7, height:7, borderRadius:"50%", background:"#c7c7cc", animation:`bop 1.2s ease-in-out ${i*0.15}s infinite` } }))
+                    ),
+                  ) : null,
+                ),
+            h("div", { ref: endRef }),
+          )
+        ),
+        h("div", { style:{ borderTop:"1px solid #e5e5ea", padding:"14px 20px 20px", background:"rgba(255,255,255,0.9)", backdropFilter:"blur(16px)" } },
+          h("div", { style:{ maxWidth:700, margin:"0 auto", display:"flex", gap:10 } },
+            h("input", {
+              ref: inputRef, value: input, onChange: e => setInput(e.target.value),
+              onKeyDown: e => e.key === "Enter" && send(input),
+              placeholder: "Ask me anything...", disabled: typing,
+              style:{ flex:1, background:"#f5f5f7", border:"1px solid #e5e5ea", borderRadius:24, padding:"14px 20px", color:"#1d1d1f", fontSize:16, outline:"none", fontFamily:"inherit" },
+            }),
+            h("button", { onClick: ()=>send(input), disabled: typing || !input.trim(), style:{
+              background: input.trim() && !typing ? "#0071e3" : "#e5e5ea",
+              border:"none", borderRadius:"50%", width:48, height:48,
+              cursor: input.trim() && !typing ? "pointer" : "default",
+              color: input.trim() && !typing ? "#fff" : "#c7c7cc",
+              fontSize:20, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center",
+            }}, "↑"),
+          )
+        ),
+      );
+    }
+
+    /* ═══════════════════════════════════════
+       APP
+       ═══════════════════════════════════════ */
+    function App() {
+      const [page, setPage] = useState("home");
+      useEffect(() => { window.scrollTo({ top:0, behavior:"instant" }); }, [page]);
+
+      return h("div", { style:{ minHeight:"100vh", background:"#fff", color:"#1d1d1f" } },
+        h(Nav, { page, setPage }),
+        page === "home" ? h(HomePage, { setPage })
+        : page === "projects" ? h(ProjectsPage, { setPage })
+        : h(ClonePage),
+      );
+    }
+
+    createRoot(document.getElementById("root")).render(h(App));
+  </script>
+</body>
+</html>
